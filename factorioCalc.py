@@ -1,6 +1,11 @@
 from colorama import init, Fore, Style
 init(convert=True)
 
+assemblyMachinesDict = {
+	1 : 0.5,
+	2 : 0.75
+}
+
 class Ingredient:
 	def __init__(self, initName, initCraftedPerSecond = None , initCraftingTime = None , initCraftedAmount = 1):
 		self.name = initName 
@@ -10,14 +15,15 @@ class Ingredient:
 			self.craftedPerSecond = initCraftedPerSecond
 		self.craftedTimes = initCraftedPerSecond/initCraftedAmount
 		self.color = Fore.WHITE
-	def __str__(self):
-		return "%s %.2f pieces of %s per second" % (self.color, self.craftedPerSecond , self.name)
-	
-	def getIngredients(self):
-		return "%s %.2f pieces of %s per second" % (self.color, self.craftedPerSecond , self.name)
-	
+		
 	def getStats(self):
 		return [self, self.craftedPerSecond]
+		
+	def __str__(self):
+		return "%s %.2f pieces of %s per second" % (self.color, self.craftedPerSecond , self.name)
+		
+	def getIngredients(self):
+		return "%s %.2f pieces of %s per second" % (self.color, self.craftedPerSecond , self.name)
 	
 class Copper_ore(Ingredient):
 	def __init__(self, initCraftedPerSecond = None , initCraftingTime = None , initCraftedAmount = 1): 
@@ -33,7 +39,17 @@ class Coal(Ingredient):
 	def __init__(self, initCraftedPerSecond = None , initCraftingTime = None , initCraftedAmount = 1): 
 		super().__init__( (type(self).__name__).lower().replace("_"," ") , initCraftedPerSecond , initCraftingTime , initCraftedAmount)
 		self.color = Fore.WHITE
-  	
+				
+class Stone(Ingredient):
+	def __init__(self, initCraftedPerSecond = None , initCraftingTime = None , initCraftedAmount = 1): 
+		super().__init__( (type(self).__name__).lower().replace("_"," ") , initCraftedPerSecond , initCraftingTime , initCraftedAmount)
+		self.color = Fore.WHITE
+	
+class Wood(Ingredient):
+	def __init__(self, initCraftedPerSecond = None , initCraftingTime = None , initCraftedAmount = 1): 
+		super().__init__( (type(self).__name__).lower().replace("_"," ") , initCraftedPerSecond , initCraftingTime , initCraftedAmount)
+		self.color = Fore.YELLOW
+		
 class Product(Ingredient):
 	def __init__(self, initName, initCraftedPerSecond = None , initCraftingTime = None , initCraftedAmount = 1):
 		Ingredient.__init__(self, initName , initCraftedPerSecond , initCraftingTime , initCraftedAmount)
@@ -87,7 +103,7 @@ class Iron_gear_wheel(Product):
 	def __init__(self, initCraftedPerSecond = None , initCraftingTime = None , initCraftedAmount = 1): 
 		super().__init__( (type(self).__name__).lower().replace("_"," ") , initCraftedPerSecond , initCraftingTime , initCraftedAmount)
 		self.color = Fore.CYAN
-		self.listOfComponents = [[Iron_plate(initCraftedPerSecond=self.craftedTimes*2,initCraftingTime=.5),2*self.craftedPerSecond]]
+		self.listOfComponents = [[Iron_plate(initCraftedPerSecond=self.craftedTimes*2),2*self.craftedPerSecond]]
 		
 class Copper_cable(Product):
 	def __init__(self, initCraftedPerSecond = None , initCraftingTime = .5 , initCraftedAmount = 2): 
@@ -125,3 +141,56 @@ class Logistic_science_pack(Product):
 		self.color = Fore.GREEN
 		self.listOfComponents = [[Transport_belt(initCraftedPerSecond=self.craftedTimes*1),1*self.craftedTimes],[Inserter(initCraftedPerSecond=self.craftedTimes*1),1*self.craftedPerSecond]]
 
+class Steel_plate(Product):
+	def __init__(self, initCraftedPerSecond = None , initCraftingTime = 16 , initCraftedAmount = 1): 
+		super().__init__( (type(self).__name__).lower().replace("_"," ") , initCraftedPerSecond , initCraftingTime , initCraftedAmount)
+		self.color = Fore.WHITE
+		self.listOfComponents = [[Iron_plate(initCraftedPerSecond=self.craftedTimes*5),5*self.craftedTimes],[Coal(initCraftedPerSecond=self.craftedTimes*0.3610108303249097),0.3610108303249097*self.craftedPerSecond]]
+
+class Solar_panel(Product):
+	def __init__(self, initCraftedPerSecond = None , initCraftingTime = 10 , initCraftedAmount = 1): 
+		super().__init__( (type(self).__name__).lower().replace("_"," ") , initCraftedPerSecond , initCraftingTime , initCraftedAmount)
+		self.color = Fore.BLUE
+		self.listOfComponents = [[Copper_plate(initCraftedPerSecond=self.craftedTimes*5),5*self.craftedTimes],[Steel_plate(initCraftedPerSecond=self.craftedTimes*5),5*self.craftedPerSecond],[Electronic_circuit(initCraftedPerSecond=self.craftedTimes*15),15*self.craftedPerSecond]]
+
+class Repair_pack(Product):
+	def __init__(self, initCraftedPerSecond = None , initCraftingTime = .5 , initCraftedAmount = 1): 
+		super().__init__( (type(self).__name__).lower().replace("_"," ") , initCraftedPerSecond , initCraftingTime , initCraftedAmount)
+		self.color = Fore.WHITE
+		self.listOfComponents = [[Iron_gear_wheel(initCraftedPerSecond=self.craftedTimes*2),2*self.craftedTimes],[Electronic_circuit(initCraftedPerSecond=self.craftedTimes*2),2*self.craftedPerSecond]]
+
+class Long_handed_inserter(Product):
+	def __init__(self, initCraftedPerSecond = None , initCraftingTime = .5 , initCraftedAmount = 1): 
+		super().__init__( (type(self).__name__).lower().replace("_"," ") , initCraftedPerSecond , initCraftingTime , initCraftedAmount)
+		self.color = Fore.RED
+		self.listOfComponents = [[Iron_plate(initCraftedPerSecond=self.craftedTimes*1),1*self.craftedTimes],[Iron_gear_wheel(initCraftedPerSecond=self.craftedTimes*1),1*self.craftedPerSecond],[Inserter(initCraftedPerSecond=self.craftedTimes*1),1*self.craftedPerSecond]]
+
+class Fast_inserter(Product):
+	def __init__(self, initCraftedPerSecond = None , initCraftingTime = .5 , initCraftedAmount = 1): 
+		super().__init__( (type(self).__name__).lower().replace("_"," ") , initCraftedPerSecond , initCraftingTime , initCraftedAmount)
+		self.color = Fore.RED
+		self.listOfComponents = [[Iron_plate(initCraftedPerSecond=self.craftedTimes*2),2*self.craftedTimes],[Electronic_circuit(initCraftedPerSecond=self.craftedTimes*2),2*self.craftedPerSecond],[Inserter(initCraftedPerSecond=self.craftedTimes*1),1*self.craftedPerSecond]]
+
+class Firearm_magazine(Product):
+	def __init__(self, initCraftedPerSecond = None , initCraftingTime = .5 , initCraftedAmount = 1): 
+		super().__init__( (type(self).__name__).lower().replace("_"," ") , initCraftedPerSecond , initCraftingTime , initCraftedAmount)
+		self.color = Fore.RED
+		self.listOfComponents = [[Iron_plate(initCraftedPerSecond=self.craftedTimes*4),4*self.craftedTimes]]
+
+class Assembling_machine_1(Product):
+	def __init__(self, initCraftedPerSecond = None , initCraftingTime = .5 , initCraftedAmount = 1): 
+		super().__init__( (type(self).__name__).lower().replace("_"," ") , initCraftedPerSecond , initCraftingTime , initCraftedAmount)
+		self.color = Fore.YELLOW
+		self.listOfComponents = [[Iron_plate(initCraftedPerSecond=self.craftedTimes*9),9*self.craftedTimes],[Iron_gear_wheel(initCraftedPerSecond=self.craftedTimes*5),5*self.craftedPerSecond],[Electronic_circuit(initCraftedPerSecond=self.craftedTimes*3),3*self.craftedPerSecond]]
+
+class Assembling_machine_2(Product):
+	def __init__(self, initCraftedPerSecond = None , initCraftingTime = .5 , initCraftedAmount = 1): 
+		super().__init__( (type(self).__name__).lower().replace("_"," ") , initCraftedPerSecond , initCraftingTime , initCraftedAmount)
+		self.color = Fore.BLUE
+		self.listOfComponents = [[Steel_plate(initCraftedPerSecond=self.craftedTimes*2),2*self.craftedTimes],[Iron_gear_wheel(initCraftedPerSecond=self.craftedTimes*5),5*self.craftedPerSecond],[Electronic_circuit(initCraftedPerSecond=self.craftedTimes*3),3*self.craftedPerSecond],[Assembling_machine_1(initCraftedPerSecond=self.craftedTimes*1),1*self.craftedPerSecond]]
+
+class Iron_stick(Product):
+	def __init__(self, initCraftedPerSecond = None , initCraftingTime = .5 , initCraftedAmount = 2): 
+		super().__init__( (type(self).__name__).lower().replace("_"," ") , initCraftedPerSecond , initCraftingTime , initCraftedAmount)
+		self.color = Fore.WHITE
+		self.listOfComponents = [[Iron_plate(initCraftedPerSecond=self.craftedTimes*1),1*self.craftedTimes]]
