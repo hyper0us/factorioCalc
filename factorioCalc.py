@@ -17,47 +17,51 @@ assemblyMachinesDict = {
 }
 assemblyMachineLevel = 2 # <- type of furnace
 
+
 class Ingredient:
 	def __init__(self, initName, initCraftedPerSecond = None , initCraftingTime = None , initCraftedAmount = 1):
 		self.name = initName 
-		if initCraftedPerSecond == None:
-			self.craftedPerSecond = initCraftedAmount/initCraftingTime
-		else:
-			self.craftedPerSecond = initCraftedPerSecond
+		self.craftedPerSecond = initCraftedPerSecond
 		self.craftedTimes = initCraftedPerSecond/initCraftedAmount
 		self.color = Fore.WHITE
 		
-	def getStats(self):
-		return [self, self.craftedPerSecond]
+	def getBasicIngredients_inner(self):
+		return [[self, self.craftedPerSecond]]
+		
+	def getMainBusIngredients_inner(self):
+		return [[self, self.craftedPerSecond]]
 		
 	def __str__(self):
 		return "%s %.2f pieces of %s per second" % (self.color, self.craftedPerSecond , self.name)
 		
-	def getIngredients(self):
+	def getBasicIngredients(self):
+		return "%s %.2f pieces of %s per second" % (self.color, self.craftedPerSecond , self.name)
+
+	def getMainBusIngredients(self):
 		return "%s %.2f pieces of %s per second" % (self.color, self.craftedPerSecond , self.name)
 
 class Copper_ore(Ingredient):
-	def __init__(self, initCraftedPerSecond = None , initCraftingTime = None , initCraftedAmount = 1): 
+	def __init__(self, initCraftedPerSecond = None , initCraftingTime = 1 , initCraftedAmount = 1): 
 		super().__init__( (type(self).__name__).lower().replace("_"," ") , initCraftedPerSecond , initCraftingTime , initCraftedAmount)
 		self.color = Fore.YELLOW
 
 class Iron_ore(Ingredient):
-	def __init__(self, initCraftedPerSecond = None , initCraftingTime = None , initCraftedAmount = 1): 
+	def __init__(self, initCraftedPerSecond = None , initCraftingTime = 1 , initCraftedAmount = 1): 
 		super().__init__( (type(self).__name__).lower().replace("_"," ") , initCraftedPerSecond , initCraftingTime , initCraftedAmount)
 		self.color = Fore.CYAN
 
 class Coal(Ingredient):
-	def __init__(self, initCraftedPerSecond = None , initCraftingTime = None , initCraftedAmount = 1): 
+	def __init__(self, initCraftedPerSecond = None , initCraftingTime = 1 , initCraftedAmount = 1): 
 		super().__init__( (type(self).__name__).lower().replace("_"," ") , initCraftedPerSecond , initCraftingTime , initCraftedAmount)
 		self.color = Fore.WHITE
 	
 class Stone(Ingredient):
-	def __init__(self, initCraftedPerSecond = None , initCraftingTime = None , initCraftedAmount = 1): 
+	def __init__(self, initCraftedPerSecond = None , initCraftingTime = 1 , initCraftedAmount = 1): 
 		super().__init__( (type(self).__name__).lower().replace("_"," ") , initCraftedPerSecond , initCraftingTime , initCraftedAmount)
 		self.color = Fore.WHITE
 
 class Wood(Ingredient):
-	def __init__(self, initCraftedPerSecond = None , initCraftingTime = None , initCraftedAmount = 1): 
+	def __init__(self, initCraftedPerSecond = None , initCraftingTime = 1 , initCraftedAmount = 1): 
 		super().__init__( (type(self).__name__).lower().replace("_"," ") , initCraftedPerSecond , initCraftingTime , initCraftedAmount)
 		self.color = Fore.YELLOW
 
@@ -66,16 +70,13 @@ class Product(Ingredient):
 		Ingredient.__init__(self, initName , initCraftedPerSecond , initCraftingTime , initCraftedAmount)
 	listOfComponents = None
 	
-	def getStats(self):
+	def getBasicIngredients_inner(self):
 		tempListOfIngredients = []
 		listOfIngredients = []
 		for singleIngredient in self.listOfComponents:
-			if not issubclass(type(singleIngredient[0]),Product): 				# it's ingredient
-				tempListOfIngredients.append(singleIngredient)
-			else:																# it's product	
-				temp = singleIngredient[0].getStats()								
-				for temporarySingleIngredient in temp:
-					tempListOfIngredients.append(temporarySingleIngredient)
+			temp = singleIngredient[0].getBasicIngredients_inner()								
+			for temporarySingleIngredient in temp:
+				tempListOfIngredients.append(temporarySingleIngredient)
 		for singleIngredient in tempListOfIngredients:
 			for index, ingredientFromList in enumerate(listOfIngredients):
 				if type(singleIngredient[0]) == type(ingredientFromList[0]):
@@ -84,6 +85,66 @@ class Product(Ingredient):
 			else:
 				listOfIngredients.append(singleIngredient)
 		return listOfIngredients
+
+	def getMainBusIngredients_inner(self):
+		tempListOfIngredients = []
+		listOfIngredients = []
+		for singleIngredient in self.listOfComponents:
+			temp = singleIngredient[0].getMainBusIngredients_inner()								
+			for temporarySingleIngredient in temp:
+				tempListOfIngredients.append(temporarySingleIngredient)
+		for singleIngredient in tempListOfIngredients:
+			for index, ingredientFromList in enumerate(listOfIngredients):
+				if type(singleIngredient[0]) == type(ingredientFromList[0]):
+					listOfIngredients[index][1] += singleIngredient[1]
+					break
+			else:
+				listOfIngredients.append(singleIngredient)
+		return listOfIngredients
+
+	def __str__(self):
+		temp = ""
+		for singleIngredient in self.listOfComponents:
+			temp += "\n\t" + str(singleIngredient[0]).replace("\n","\n\t")
+		return "%s %.2f pieces of %s per second that requires" % (self.color, self.craftedPerSecond, self.name) + temp
+	
+	def getBasicIngredients(self):
+		listOfIngredients = self.getBasicIngredients_inner()
+		temp = ""
+		for singleIngredient in listOfIngredients:
+			temp += "\n\t%s %.2f pieces of %s per second" % (singleIngredient[0].color, singleIngredient[1] , singleIngredient[0].name)
+		return "%s To get %.2f pieces of %s per second you need" % (self.color, self.craftedPerSecond , self.name) + temp
+		
+	def getMainBusIngredients(self):
+		listOfIngredients = self.getMainBusIngredients_inner()
+		temp = ""
+		for singleIngredient in listOfIngredients:
+			temp += "\n\t%s %.2f pieces of %s per second" % (singleIngredient[0].color, singleIngredient[1] , singleIngredient[0].name)
+		return "%s To get %.2f pieces of %s per second you need" % (self.color, self.craftedPerSecond , self.name) + temp
+
+class Main_bus_ingredient(Product):
+	def __init__(self, initName, initCraftedPerSecond = None , initCraftingTime = None , initCraftedAmount = 1):
+		Ingredient.__init__(self, initName , initCraftedPerSecond , initCraftingTime , initCraftedAmount)
+	listOfComponents = None
+	
+	def getBasicIngredients_inner(self):
+		tempListOfIngredients = []
+		listOfIngredients = []
+		for singleIngredient in self.listOfComponents:
+			temp = singleIngredient[0].getBasicIngredients_inner()								
+			for temporarySingleIngredient in temp:
+				tempListOfIngredients.append(temporarySingleIngredient)
+		for singleIngredient in tempListOfIngredients:
+			for index, ingredientFromList in enumerate(listOfIngredients):
+				if type(singleIngredient[0]) == type(ingredientFromList[0]):
+					listOfIngredients[index][1] += singleIngredient[1]
+					break
+			else:
+				listOfIngredients.append(singleIngredient)
+		return listOfIngredients
+	
+	def getMainBusIngredients_inner(self):
+		return [[self, self.craftedPerSecond]]
 		
 	def __str__(self):
 		temp = ""
@@ -91,27 +152,34 @@ class Product(Ingredient):
 			temp += "\n\t" + str(singleIngredient[0]).replace("\n","\n\t")
 		return "%s %.2f pieces of %s per second that requires" % (self.color, self.craftedPerSecond, self.name) + temp
 	
-	def getIngredients(self):
-		listOfIngredients = self.getStats()
+	def getBasicIngredients(self):
+		listOfIngredients = self.getBasicIngredients_inner()
+		temp = ""
+		for singleIngredient in listOfIngredients:
+			temp += "\n\t%s %.2f pieces of %s per second" % (singleIngredient[0].color, singleIngredient[1] , singleIngredient[0].name)
+		return "%s To get %.2f pieces of %s per second you need" % (self.color, self.craftedPerSecond , self.name) + temp
+		
+	def getMainBusIngredients(self):
+		listOfIngredients = self.getMainBusIngredients_inner()
 		temp = ""
 		for singleIngredient in listOfIngredients:
 			temp += "\n\t%s %.2f pieces of %s per second" % (singleIngredient[0].color, singleIngredient[1] , singleIngredient[0].name)
 		return "%s To get %.2f pieces of %s per second you need" % (self.color, self.craftedPerSecond , self.name) + temp
 
-class Copper_plate(Product):
-	def __init__(self, initCraftedPerSecond = None , initCraftingTime = None , initCraftedAmount = 1): 
+class Copper_plate(Main_bus_ingredient):
+	def __init__(self, initCraftedPerSecond = None , initCraftingTime = 3.2 , initCraftedAmount = 1): 
 		super().__init__( (type(self).__name__).lower().replace("_"," ") , initCraftedPerSecond , initCraftingTime , initCraftedAmount)
 		self.color = Fore.YELLOW
-		self.listOfComponents = [[Copper_ore(initCraftedPerSecond=self.craftedTimes*3.2),3.2*self.craftedPerSecond],[Coal(initCraftedPerSecond=self.craftedTimes*0.0720461095100865),0.0720461095100865*self.craftedPerSecond]]
+		self.listOfComponents = [[Copper_ore(initCraftedPerSecond=self.craftedTimes*1),1*self.craftedPerSecond],[Coal(initCraftedPerSecond=self.craftedTimes*0.0720461095100865),0.0720461095100865*self.craftedPerSecond]]
 
-class Iron_plate(Product):
-	def __init__(self, initCraftedPerSecond = None , initCraftingTime = None , initCraftedAmount = 1): 
+class Iron_plate(Main_bus_ingredient):
+	def __init__(self, initCraftedPerSecond = None , initCraftingTime = 3.2 , initCraftedAmount = 1): 
 		super().__init__( (type(self).__name__).lower().replace("_"," ") , initCraftedPerSecond , initCraftingTime , initCraftedAmount)
 		self.color = Fore.CYAN
-		self.listOfComponents = [[Iron_ore(initCraftedPerSecond*3.2),3.2*self.craftedPerSecond],[Coal(initCraftedPerSecond*0.0720461095100865),0.0720461095100865*self.craftedPerSecond]]
+		self.listOfComponents = [[Iron_ore(initCraftedPerSecond*1),1*self.craftedPerSecond],[Coal(initCraftedPerSecond*0.0720461095100865),0.0720461095100865*self.craftedPerSecond]]
 
 class Iron_gear_wheel(Product):
-	def __init__(self, initCraftedPerSecond = None , initCraftingTime = None , initCraftedAmount = 1): 
+	def __init__(self, initCraftedPerSecond = None , initCraftingTime = 1 , initCraftedAmount = 1): 
 		super().__init__( (type(self).__name__).lower().replace("_"," ") , initCraftedPerSecond , initCraftingTime , initCraftedAmount)
 		self.color = Fore.CYAN
 		self.listOfComponents = [[Iron_plate(initCraftedPerSecond=self.craftedTimes*2),2*self.craftedPerSecond]]
@@ -122,7 +190,7 @@ class Copper_cable(Product):
 		self.color = Fore.CYAN
 		self.listOfComponents = [[Copper_plate(initCraftedPerSecond=self.craftedTimes*1),1*self.craftedPerSecond]]
 
-class Electronic_circuit(Product):
+class Electronic_circuit(Main_bus_ingredient):
 	def __init__(self, initCraftedPerSecond = None , initCraftingTime = .5 , initCraftedAmount = 1): 
 		super().__init__( (type(self).__name__).lower().replace("_"," ") , initCraftedPerSecond , initCraftingTime , initCraftedAmount)
 		self.color = Fore.GREEN
