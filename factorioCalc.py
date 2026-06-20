@@ -11,14 +11,14 @@ furnacesDict = {
 furnaceType = "Steel" # <- type of furnace
 
 
-## select globally level of assembly machines used
-assemblyMachinesDict = {
+## select globally level of assembling machines used
+assemblingMachinesDict = {
 	1 : 0.5,
 	2 : 0.75
 }
-assemblyMachineLevel = 2 # <- type of furnace
+assemblingMachineLevel = 2 # <- level of assembling machine
 
-
+########## Ingredient class ##########
 class Ingredient:
 	def __init__(self, initName, initStation, initCraftedPerSecond = None , initCraftingTime = None , initCraftedAmount = 1):
 		self.name = initName 
@@ -30,11 +30,11 @@ class Ingredient:
 		return [[self, self.craftedPerSecond]]
 		
 	def __str__(self):
-		return "%s %.2f pieces of %s per second" % (self.color, self.craftedPerSecond , self.name)
+		return "%s %.2f units of %s per second" % (self.color, self.craftedPerSecond , self.name)
 		
 	def getIngredients(self):
-		return "%s %.2f pieces of %s per second" % (self.color, self.craftedPerSecond , self.name)
-
+		return self
+########### Station class ############
 class Station:
 	def __init__(self, initName, initSpeedModifier):
 		self.name = initName
@@ -47,11 +47,19 @@ class Station:
 
 class AssemblingMachine(Station):
 	def __init__(self): 
-		super().__init__( (type(self).__name__).lower().replace("_"," "), assemblyMachinesDict[assemblyMachineLevel])
+		super().__init__( (type(self).__name__).lower().replace("_"," "), assemblingMachinesDict[assemblingMachineLevel])
 
 class Furnace(Station):
 	def __init__(self): 
 		super().__init__( (type(self).__name__).lower().replace("_"," "), furnacesDict[furnaceType])
+
+class Chemical_plant(Station):
+	def __init__(self): 
+		super().__init__( (type(self).__name__).lower().replace("_"," "), 1)
+
+class Oil_refinery(Station):
+	def __init__(self): 
+		super().__init__( (type(self).__name__).lower().replace("_"," "), 1)
 
 class Copper_ore(Ingredient):
 	def __init__(self, initCraftedPerSecond = None , initCraftingTime = 1 , initCraftedAmount = 1): 
@@ -78,6 +86,16 @@ class Wood(Ingredient):
 		super().__init__( (type(self).__name__).lower().replace("_"," "), initCraftedPerSecond, initCraftingTime, initCraftedAmount)
 		self.color = Fore.YELLOW
 
+class Crude_oil(Ingredient):
+	def __init__(self, initCraftedPerSecond = None , initCraftingTime = 1 , initCraftedAmount = 1): 
+		super().__init__( (type(self).__name__).lower().replace("_"," "), initCraftedPerSecond, initCraftingTime, initCraftedAmount)
+		self.color = Fore.WHITE
+
+class Water(Ingredient):
+	def __init__(self, initCraftedPerSecond = None , initCraftingTime = 1 , initCraftedAmount = 1): 
+		super().__init__( (type(self).__name__).lower().replace("_"," "), initCraftedPerSecond, initCraftingTime, initCraftedAmount)
+		self.color = Fore.BLUE
+########### Product class ############
 class Product(Ingredient):
 	def __init__(self, initName, initStation = None, initCraftedPerSecond = None , initCraftingTime = None , initCraftedAmount = 1):
 		Ingredient.__init__(self, initName, initStation, initCraftedPerSecond, initCraftingTime, initCraftedAmount)
@@ -106,14 +124,14 @@ class Product(Ingredient):
 		temp = ""
 		for singleIngredient in self.listOfComponents:
 			temp += "\n\t" + str(singleIngredient[0]).replace("\n","\n\t")
-		return "%s %.2f pieces of %s per second that requires" % (self.color, self.craftedPerSecond, self.name) + temp
+		return "%s %.2f units of %s per second that requires" % (self.color, self.craftedPerSecond, self.name) + temp
 
 	def getIngredients(self):
 		listOfIngredients = self.getIngredients_inner()
 		temp = ""
 		for singleIngredient in listOfIngredients:
-			temp += "\n\t%s %.2f pieces of %s per second" % (singleIngredient[0].color, singleIngredient[1] , singleIngredient[0].name)
-		return "%s To get %.2f pieces of %s per second you need" % (self.color, self.craftedPerSecond , self.name) + temp
+			temp += "\n\t%s %.2f units of %s per second" % (singleIngredient[0].color, singleIngredient[1] , singleIngredient[0].name)
+		return "%s To get %.2f units of %s per second you need" % (self.color, self.craftedPerSecond , self.name) + temp
 
 class Copper_plate(Product):
 	def __init__(self, initCraftedPerSecond = None , initCraftingTime = 3.2 , initCraftedAmount = 1): 
@@ -274,7 +292,113 @@ class Piercing_rounds_magazine(Product):
 class Grenade(Product):
 	def __init__(self, initCraftedPerSecond = None , initCraftingTime = 8 , initCraftedAmount = 1): 
 		super().__init__( (type(self).__name__).lower().replace("_"," "), AssemblingMachine(), initCraftedPerSecond, initCraftingTime, initCraftedAmount)
-		print(self.craftedTimes)
 		self.color = Fore.CYAN
 		self.listOfComponents = [[Coal(initCraftedPerSecond=self.craftedTimes*10),10*self.craftedTimes],[Iron_plate(initCraftedPerSecond=self.craftedTimes*5),5*self.craftedTimes]]
 
+class Petroleum_gas(Product):
+	def __init__(self, initCraftedPerSecond = None , initCraftingTime = 5 , initCraftedAmount = 45): 
+		super().__init__( (type(self).__name__).lower().replace("_"," "), Oil_refinery(), initCraftedPerSecond, initCraftingTime, initCraftedAmount)
+		self.color = Fore.WHITE
+		self.listOfComponents = [[Crude_oil(initCraftedPerSecond=self.craftedTimes*100),100*self.craftedTimes]]
+
+class Sulfur(Product):
+	def __init__(self, initCraftedPerSecond = None , initCraftingTime = 1 , initCraftedAmount = 2): 
+		super().__init__( (type(self).__name__).lower().replace("_"," "), Chemical_plant(), initCraftedPerSecond, initCraftingTime, initCraftedAmount)
+		self.color = Fore.YELLOW
+		self.listOfComponents = [[Petroleum_gas(initCraftedPerSecond=self.craftedTimes*30),30*self.craftedTimes],[Water(initCraftedPerSecond=self.craftedTimes*30),30*self.craftedTimes]]
+
+class Plastic_bar(Product):
+	def __init__(self, initCraftedPerSecond = None , initCraftingTime = 1 , initCraftedAmount = 2): 
+		super().__init__( (type(self).__name__).lower().replace("_"," "), Chemical_plant(), initCraftedPerSecond, initCraftingTime, initCraftedAmount)
+		self.color = Fore.YELLOW
+		self.listOfComponents = [[Coal(initCraftedPerSecond=self.craftedTimes*1),1*self.craftedTimes],[Petroleum_gas(initCraftedPerSecond=self.craftedTimes*20),20*self.craftedTimes]]
+
+class Sulfuric_acid(Product):
+	def __init__(self, initCraftedPerSecond = None , initCraftingTime = 1 , initCraftedAmount = 50): 
+		super().__init__( (type(self).__name__).lower().replace("_"," "), Chemical_plant(), initCraftedPerSecond, initCraftingTime, initCraftedAmount)
+		self.color = Fore.YELLOW
+		self.listOfComponents = [[Iron_plate(initCraftedPerSecond=self.craftedTimes*1),1*self.craftedTimes],[Sulfur(initCraftedPerSecond=self.craftedTimes*5),5*self.craftedTimes],[Water(initCraftedPerSecond=self.craftedTimes*100),100*self.craftedTimes]]
+
+class Explosives(Product):
+	def __init__(self, initCraftedPerSecond = None , initCraftingTime = 4 , initCraftedAmount = 2): 
+		super().__init__( (type(self).__name__).lower().replace("_"," "), AssemblingMachine(), initCraftedPerSecond, initCraftingTime, initCraftedAmount)
+		self.color = Fore.YELLOW
+		self.listOfComponents = [[Coal(initCraftedPerSecond=self.craftedTimes*1),1*self.craftedTimes],[Sulfur(initCraftedPerSecond=self.craftedTimes*1),1*self.craftedTimes],[Water(initCraftedPerSecond=self.craftedTimes*10),10*self.craftedTimes]]
+
+class Advanced_circuit(Product):
+	def __init__(self, initCraftedPerSecond = None , initCraftingTime = 6 , initCraftedAmount = 1): 
+		super().__init__( (type(self).__name__).lower().replace("_"," "), AssemblingMachine(), initCraftedPerSecond, initCraftingTime, initCraftedAmount)
+		self.color = Fore.RED
+		self.listOfComponents = [[Copper_cable(initCraftedPerSecond=self.craftedTimes*4),4*self.craftedTimes],[Electronic_circuit(initCraftedPerSecond=self.craftedTimes*2),2*self.craftedTimes],[Plastic_bar(initCraftedPerSecond=self.craftedTimes*2),2*self.craftedTimes]]
+
+class Pipe(Product):
+	def __init__(self, initCraftedPerSecond = None , initCraftingTime = .5 , initCraftedAmount = 1): 
+		super().__init__( (type(self).__name__).lower().replace("_"," "), AssemblingMachine(), initCraftedPerSecond, initCraftingTime, initCraftedAmount)
+		self.color = Fore.WHITE
+		self.listOfComponents = [[Iron_plate(initCraftedPerSecond=self.craftedTimes*1),1*self.craftedTimes]]
+
+class Engine_unit(Product):
+	def __init__(self, initCraftedPerSecond = None , initCraftingTime = 10 , initCraftedAmount = 1): 
+		super().__init__( (type(self).__name__).lower().replace("_"," "), AssemblingMachine(), initCraftedPerSecond, initCraftingTime, initCraftedAmount)
+		self.color = Fore.WHITE
+		self.listOfComponents = [[Iron_gear_wheel(initCraftedPerSecond=self.craftedTimes*1),1*self.craftedTimes],[Pipe(initCraftedPerSecond=self.craftedTimes*2),2*self.craftedTimes],[Steel_plate(initCraftedPerSecond=self.craftedTimes*1),1*self.craftedTimes]]
+
+class Chemical_science_pack(Product):
+	def __init__(self, initCraftedPerSecond = None , initCraftingTime = 24 , initCraftedAmount = 2): 
+		super().__init__( (type(self).__name__).lower().replace("_"," "), AssemblingMachine(), initCraftedPerSecond, initCraftingTime, initCraftedAmount)
+		self.color = Fore.CYAN
+		self.listOfComponents = [[Advanced_circuit(initCraftedPerSecond=self.craftedTimes*3),3*self.craftedTimes],[Engine_unit(initCraftedPerSecond=self.craftedTimes*2),2*self.craftedTimes],[Sulfur(initCraftedPerSecond=self.craftedTimes*1),1*self.craftedTimes]]
+
+class Battery(Product):
+	def __init__(self, initCraftedPerSecond = None , initCraftingTime = 4 , initCraftedAmount = 1): 
+		super().__init__( (type(self).__name__).lower().replace("_"," "), Chemical_plant(), initCraftedPerSecond, initCraftingTime, initCraftedAmount)
+		self.color = Fore.WHITE
+		self.listOfComponents = [[Copper_plate(initCraftedPerSecond=self.craftedTimes*1),1*self.craftedTimes],[Iron_plate(initCraftedPerSecond=self.craftedTimes*1),1*self.craftedTimes],[Sulfuric_acid(initCraftedPerSecond=self.craftedTimes*20),20*self.craftedTimes]]
+
+class Processing_unit(Product):
+	def __init__(self, initCraftedPerSecond = None , initCraftingTime = 10 , initCraftedAmount = 1): 
+		super().__init__( (type(self).__name__).lower().replace("_"," "), Chemical_plant(), initCraftedPerSecond, initCraftingTime, initCraftedAmount)
+		self.color = Fore.WHITE
+		self.listOfComponents = [[Advanced_circuit(initCraftedPerSecond=self.craftedTimes*2),2*self.craftedTimes],[Electronic_circuit(initCraftedPerSecond=self.craftedTimes*20),20*self.craftedTimes],[Sulfuric_acid(initCraftedPerSecond=self.craftedTimes*5),5*self.craftedTimes]]
+
+class Rocket(Product):
+	def __init__(self, initCraftedPerSecond = None , initCraftingTime = 4 , initCraftedAmount = 1): 
+		super().__init__( (type(self).__name__).lower().replace("_"," "), AssemblingMachine(), initCraftedPerSecond, initCraftingTime, initCraftedAmount)
+		self.color = Fore.YELLOW
+		self.listOfComponents = [[Explosives(initCraftedPerSecond=self.craftedTimes*1),1*self.craftedTimes],[Iron_plate(initCraftedPerSecond=self.craftedTimes*2),2*self.craftedTimes]]
+
+class Explosive_rocket(Product):
+	def __init__(self, initCraftedPerSecond = None , initCraftingTime = 8 , initCraftedAmount = 1): 
+		super().__init__( (type(self).__name__).lower().replace("_"," "), AssemblingMachine(), initCraftedPerSecond, initCraftingTime, initCraftedAmount)
+		self.color = Fore.RED
+		self.listOfComponents = [[Explosives(initCraftedPerSecond=self.craftedTimes*2),2*self.craftedTimes],[Explosives(initCraftedPerSecond=self.craftedTimes*1),1*self.craftedTimes]]
+
+class Cannon_shell(Product):
+	def __init__(self, initCraftedPerSecond = None , initCraftingTime = 8 , initCraftedAmount = 1): 
+		super().__init__( (type(self).__name__).lower().replace("_"," "), AssemblingMachine(), initCraftedPerSecond, initCraftingTime, initCraftedAmount)
+		self.color = Fore.YELLOW
+		self.listOfComponents = [[Explosives(initCraftedPerSecond=self.craftedTimes*1),1*self.craftedTimes],[Plastic_bar(initCraftedPerSecond=self.craftedTimes*2),2*self.craftedTimes],[Steel_plate(initCraftedPerSecond=self.craftedTimes*2),2*self.craftedTimes]]
+
+class Explosive_cannon_shell(Product):
+	def __init__(self, initCraftedPerSecond = None , initCraftingTime = 8 , initCraftedAmount = 1): 
+		super().__init__( (type(self).__name__).lower().replace("_"," "), AssemblingMachine(), initCraftedPerSecond, initCraftingTime, initCraftedAmount)
+		self.color = Fore.YELLOW
+		self.listOfComponents = [[Explosives(initCraftedPerSecond=self.craftedTimes*2),2*self.craftedTimes],[Plastic_bar(initCraftedPerSecond=self.craftedTimes*2),2*self.craftedTimes],[Steel_plate(initCraftedPerSecond=self.craftedTimes*2),2*self.craftedTimes]]
+
+class Poison_capsule(Product):
+	def __init__(self, initCraftedPerSecond = None , initCraftingTime = 8 , initCraftedAmount = 1): 
+		super().__init__( (type(self).__name__).lower().replace("_"," "), AssemblingMachine(), initCraftedPerSecond, initCraftingTime, initCraftedAmount)
+		self.color = Fore.BLUE
+		self.listOfComponents = [[Coal(initCraftedPerSecond=self.craftedTimes*10),10*self.craftedTimes],[Electronic_circuit(initCraftedPerSecond=self.craftedTimes*3),3*self.craftedTimes],[Steel_plate(initCraftedPerSecond=self.craftedTimes*3),3*self.craftedTimes]]
+
+class Slowdown_capsule(Product):
+	def __init__(self, initCraftedPerSecond = None , initCraftingTime = 8 , initCraftedAmount = 1): 
+		super().__init__( (type(self).__name__).lower().replace("_"," "), AssemblingMachine(), initCraftedPerSecond, initCraftingTime, initCraftedAmount)
+		self.color = Fore.YELLOW
+		self.listOfComponents = [[Coal(initCraftedPerSecond=self.craftedTimes*5),5*self.craftedTimes],[Electronic_circuit(initCraftedPerSecond=self.craftedTimes*2),2*self.craftedTimes],[Steel_plate(initCraftedPerSecond=self.craftedTimes*2),2*self.craftedTimes]]
+
+class Flamethrower_ammo(Product):
+	def __init__(self, initCraftedPerSecond = None , initCraftingTime = 6 , initCraftedAmount = 1): 
+		super().__init__( (type(self).__name__).lower().replace("_"," "), Chemical_plant(), initCraftedPerSecond, initCraftingTime, initCraftedAmount)
+		self.color = Fore.YELLOW
+		self.listOfComponents = [[Crude_oil(initCraftedPerSecond=self.craftedTimes*100),100*self.craftedTimes],[Steel_plate(initCraftedPerSecond=self.craftedTimes*5),5*self.craftedTimes]]
